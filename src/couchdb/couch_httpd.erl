@@ -481,7 +481,7 @@ body(#httpd{mochi_req=MochiReq, req_body=ReqBody}) ->
     end.
 
 json_body(Httpd) ->
-    ?JSON_DECODE(body(Httpd)).
+    hd(msgpack:unpack_all(body(Httpd))).
 
 json_body_obj(Httpd) ->
     case json_body(Httpd) of
@@ -620,10 +620,10 @@ send_json(Req, Code, Value) ->
 
 send_json(Req, Code, Headers, Value) ->
     DefaultHeaders = [
-        {"Content-Type", negotiate_content_type(Req)},
+        {"Content-Type", "application/x-msgpack"},
         {"Cache-Control", "must-revalidate"}
     ],
-    Body = [start_jsonp(Req), ?JSON_ENCODE(Value), end_jsonp(), $\n],
+    Body = msgpack:pack(Value),
     send_response(Req, Code, DefaultHeaders ++ Headers, Body).
 
 start_json_response(Req, Code) ->
